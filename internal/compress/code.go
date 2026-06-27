@@ -357,7 +357,7 @@ func (s *CodeSkeletonizer) skeletonizeFuncBody(lines []string, skippedLines *int
 	blockLines := 0 // lines shown inside current depth-1 block
 	omittedCount := 0
 	omitting := false
-	limit := s.MaxBodyLines * 4 // ~20 lines shown per function before omission kicks in
+	limit := s.MaxBodyLines * 3 // ~15 lines shown per function before omission kicks in
 
 	flushOmit := func() {
 		if omitting {
