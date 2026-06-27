@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
 )
 
 type SymbolKind string
@@ -48,7 +47,6 @@ type RepoMap struct {
 }
 
 type Builder struct {
-	mu          sync.Mutex
 	excludeDirs []string
 	includeExts map[string]bool
 }
@@ -94,9 +92,6 @@ func (b *Builder) Build(root string) (*RepoMap, error) {
 		Files: []FileEntry{},
 	}
 
-	b.mu.Lock()
-	defer b.mu.Unlock()
-
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
@@ -117,7 +112,10 @@ func (b *Builder) Build(root string) (*RepoMap, error) {
 			return nil
 		}
 
-		relPath, _ := filepath.Rel(root, path)
+		relPath, err := filepath.Rel(root, path)
+		if err != nil {
+			relPath = path
+		}
 		entry, err := b.parseFile(path, relPath, ext)
 		if err != nil {
 			return nil

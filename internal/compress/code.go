@@ -303,6 +303,10 @@ func (s *CodeSkeletonizer) Skeletonize(source string, filename string) string {
 	var skippedLines int
 
 	switch lang {
+	case LangGo, LangRust, LangJava, LangCSharp, LangKotlin, LangSwift, LangScala, LangGroovy:
+		result = s.skeletonizeFuncBody(lines, &skippedLines)
+	case LangTypeScript, LangJavaScript:
+		result = s.skeletonizeFuncBody(lines, &skippedLines)
 	case LangPython:
 		result = s.skeletonizePython(lines, &skippedLines)
 	case LangRuby:
@@ -342,6 +346,86 @@ func isCommentLine(trimmed string) bool {
 		strings.HasPrefix(trimmed, "--") || strings.HasPrefix(trimmed, "<!--") ||
 		strings.HasPrefix(trimmed, "%") || strings.HasPrefix(trimmed, "\"\"\"") ||
 		strings.HasPrefix(trimmed, "'''")
+}
+
+// skeletonizeFuncBody handles languages where functions are delimited by braces.
+// It tracks total lines shown per top-level block (not just consecutive non-brace lines),
+// so functions with lots of control flow still get truncated once they're long enough.
+func (s *CodeSkeletonizer) skeletonizeFuncBody(lines []string, skippedLines *int) []string {
+	var result []string
+	depth := 0
+	blockLines := 0 // lines shown inside current depth-1 block
+	omittedCount := 0
+	omitting := false
+	limit := s.MaxBodyLines * 4 // ~20 lines shown per function before omission kicks in
+
+	flushOmit := func() {
+		if omitting {
+			result = append(result, fmt.Sprintf("    [%d lines omitted]", omittedCount))
+			omitting = false
+			omittedCount = 0
+		}
+	}
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		opens := strings.Count(trimmed, "{")
+		closes := strings.Count(trimmed, "}")
+		isComment := isCommentLine(trimmed)
+		isEmpty := trimmed == ""
+
+		if isComment || isEmpty {
+			if depth <= 1 {
+				flushOmit()
+			}
+			result = append(result, line)
+			continue
+		}
+
+		prevDepth := depth
+		depth += opens - closes
+		if depth < 0 {
+			depth = 0
+		}
+
+		// Returning to top level: flush any pending omission and show closing brace
+		if prevDepth > 0 && depth == 0 {
+			flushOmit()
+			blockLines = 0
+			result = append(result, line)
+			continue
+		}
+
+		// At top level (depth == 0 before and after): always show (type defs, var, etc.)
+		if prevDepth == 0 && depth == 0 {
+			result = append(result, line)
+			continue
+		}
+
+		// Opening a top-level block (e.g. func signature with {): show and reset counter
+		if prevDepth == 0 && depth > 0 {
+			result = append(result, line)
+			blockLines = 0
+			omitting = false
+			omittedCount = 0
+			continue
+		}
+
+		// Inside a block: count total lines shown and omit beyond limit
+		if blockLines < limit {
+			flushOmit()
+			result = append(result, line)
+			blockLines++
+		} else {
+			omitting = true
+			omittedCount++
+			*skippedLines++
+		}
+	}
+
+	flushOmit()
+
+	return result
 }
 
 func (s *CodeSkeletonizer) skeletonizeBraced(lines []string, lang Lang, skippedLines *int) []string {

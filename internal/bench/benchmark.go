@@ -193,7 +193,7 @@ func (b *BenchmarkSuite) benchmarkText() {
 // runBenchmark runs a single benchmark.
 func (b *BenchmarkSuite) runBenchmark(name, contentType, content string) {
 	start := time.Now()
-	compressed, meta := b.compressor.Compress(content)
+	compressed, meta := b.compressor.Compress(content, "")
 	latency := time.Since(start).Seconds() * 1000
 
 	originalSize := len(content)

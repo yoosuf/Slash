@@ -3,6 +3,7 @@ package plugin
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -72,36 +73,54 @@ func claudeCode() *HostPlugin {
 	}
 }
 
-func claudeConfigPath() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".claude", "settings.json")
+func claudeConfigPath() (string, error) {
+	home, err := userHome()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".claude", "settings.json"), nil
 }
 
+// claudeSettings mirrors the shape of ~/.claude/settings.json.
+// Hooks use PascalCase keys matching Claude Code's hook event names.
 type claudeSettings struct {
-	Hooks *claudeHooks `json:"hooks,omitempty"`
+	Hooks map[string][]claudeHookEntry `json:"hooks,omitempty"`
 }
 
-type claudeHooks struct {
-	PreToolUse  string `json:"preToolUse,omitempty"`
-	PostToolUse string `json:"postToolUse,omitempty"`
+type claudeHookEntry struct {
+	Matcher string        `json:"matcher,omitempty"`
+	Hooks   []claudeHookCmd `json:"hooks"`
+}
+
+type claudeHookCmd struct {
+	Type    string `json:"type"`
+	Command string `json:"command"`
+}
+
+func slashHookEntries() []claudeHookEntry {
+	return []claudeHookEntry{
+		{Hooks: []claudeHookCmd{{Type: "command", Command: "slash hook"}}},
+	}
 }
 
 func isClaudeCodeInstalled() bool {
-	path := claudeConfigPath()
+	path, err := claudeConfigPath()
+	if err != nil {
+		return false
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return false
 	}
-	var s claudeSettings
-	if err := json.Unmarshal(data, &s); err != nil {
-		return false
-	}
-	return s.Hooks != nil && strings.Contains(s.Hooks.PreToolUse, "slash")
+	return strings.Contains(string(data), "slash hook")
 }
 
 func installClaudeCode(socketPath string) error {
-	path := claudeConfigPath()
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+	path, err := claudeConfigPath()
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return err
 	}
 
@@ -110,20 +129,24 @@ func installClaudeCode(socketPath string) error {
 	if err == nil {
 		_ = json.Unmarshal(data, &s)
 	}
-	s.Hooks = &claudeHooks{
-		PreToolUse:  "slash hook",
-		PostToolUse: "slash hook",
+	if s.Hooks == nil {
+		s.Hooks = make(map[string][]claudeHookEntry)
 	}
+	s.Hooks["PreToolUse"] = slashHookEntries()
+	s.Hooks["PostToolUse"] = slashHookEntries()
 
 	data, err = json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, 0600)
 }
 
 func uninstallClaudeCode() error {
-	path := claudeConfigPath()
+	path, err := claudeConfigPath()
+	if err != nil {
+		return nil
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil
@@ -132,12 +155,16 @@ func uninstallClaudeCode() error {
 	if err := json.Unmarshal(data, &s); err != nil {
 		return nil
 	}
-	s.Hooks = nil
+	delete(s.Hooks, "PreToolUse")
+	delete(s.Hooks, "PostToolUse")
+	if len(s.Hooks) == 0 {
+		s.Hooks = nil
+	}
 	data, err = json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, 0600)
 }
 
 // --- Codex ---
@@ -153,9 +180,12 @@ func codex() *HostPlugin {
 	}
 }
 
-func codexConfigPath() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".codex", "hooks.json")
+func codexConfigPath() (string, error) {
+	home, err := userHome()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".codex", "hooks.json"), nil
 }
 
 type codexHooks struct {
@@ -164,7 +194,10 @@ type codexHooks struct {
 }
 
 func isCodexInstalled() bool {
-	path := codexConfigPath()
+	path, err := codexConfigPath()
+	if err != nil {
+		return false
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return false
@@ -173,17 +206,27 @@ func isCodexInstalled() bool {
 }
 
 func installCodex(socketPath string) error {
-	path := codexConfigPath()
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+	path, err := codexConfigPath()
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return err
 	}
 	h := codexHooks{PreToolUse: "slash hook", PostToolUse: "slash hook"}
-	data, _ := json.MarshalIndent(h, "", "  ")
-	return os.WriteFile(path, data, 0644)
+	data, err := json.MarshalIndent(h, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0600)
 }
 
 func uninstallCodex() error {
-	return os.Remove(codexConfigPath())
+	path, err := codexConfigPath()
+	if err != nil {
+		return nil
+	}
+	return os.Remove(path)
 }
 
 // --- Cursor ---
@@ -213,9 +256,12 @@ func windsurf() *HostPlugin {
 	}
 }
 
-func cursorLikeConfigPath(app string) string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", app, "User", "settings.json")
+func cursorLikeConfigPath(app string) (string, error) {
+	home, err := userHome()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".config", app, "User", "settings.json"), nil
 }
 
 type vscodeSettings struct {
@@ -229,8 +275,11 @@ type vscodeHooks struct {
 
 func installCursorLike(app string) func(string) error {
 	return func(socketPath string) error {
-		path := cursorLikeConfigPath(app)
-		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		path, err := cursorLikeConfigPath(app)
+		if err != nil {
+			return err
+		}
+		if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 			return err
 		}
 		var s vscodeSettings
@@ -243,13 +292,16 @@ func installCursorLike(app string) func(string) error {
 		if err != nil {
 			return err
 		}
-		return os.WriteFile(path, data, 0644)
+		return os.WriteFile(path, data, 0600)
 	}
 }
 
 func uninstallCursorLike(app string) func() error {
 	return func() error {
-		path := cursorLikeConfigPath(app)
+		path, err := cursorLikeConfigPath(app)
+		if err != nil {
+			return nil
+		}
 		data, err := os.ReadFile(path)
 		if err != nil {
 			return nil
@@ -263,13 +315,16 @@ func uninstallCursorLike(app string) func() error {
 		if err != nil {
 			return err
 		}
-		return os.WriteFile(path, data, 0644)
+		return os.WriteFile(path, data, 0600)
 	}
 }
 
 func isCursorLikeInstalled(app string) func() bool {
 	return func() bool {
-		path := cursorLikeConfigPath(app)
+		path, err := cursorLikeConfigPath(app)
+		if err != nil {
+			return false
+		}
 		data, err := os.ReadFile(path)
 		if err != nil {
 			return false
@@ -292,7 +347,7 @@ func antigravity() *HostPlugin {
 }
 
 func antigravityConfigPath() string {
-	home, _ := os.UserHomeDir()
+	home, _ := os.UserHomeDir() // safe: empty string causes stat/read to fail gracefully
 	return filepath.Join(home, ".config", "agy", "hooks.json")
 }
 
@@ -310,7 +365,7 @@ func copilot() *HostPlugin {
 }
 
 func copilotConfigPath() string {
-	home, _ := os.UserHomeDir()
+	home, _ := os.UserHomeDir() // safe: empty string causes stat/read to fail gracefully
 	return filepath.Join(home, ".config", "github-copilot", "hooks.json")
 }
 
@@ -320,51 +375,30 @@ type genericHooks struct {
 }
 
 func installJSONHook(app string) func(string) error {
-	var configPath func() string
-	switch app {
-	case "antigravity":
-		configPath = antigravityConfigPath
-	case "github-copilot":
-		configPath = copilotConfigPath
-	default:
-		configPath = antigravityConfigPath
-	}
+	configPath := jsonHookConfigPath(app)
 	return func(socketPath string) error {
 		path := configPath()
 		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 			return err
 		}
 		h := genericHooks{PreToolUse: "slash hook", PostToolUse: "slash hook"}
-		data, _ := json.MarshalIndent(h, "", "  ")
-		return os.WriteFile(path, data, 0644)
+		data, err := json.MarshalIndent(h, "", "  ")
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(path, data, 0600)
 	}
 }
 
 func uninstallJSONHook(app string) func() error {
-	var configPath func() string
-	switch app {
-	case "antigravity":
-		configPath = antigravityConfigPath
-	case "github-copilot":
-		configPath = copilotConfigPath
-	default:
-		configPath = antigravityConfigPath
-	}
+	configPath := jsonHookConfigPath(app)
 	return func() error {
 		return os.Remove(configPath())
 	}
 }
 
 func isJSONHookInstalled(app string) func() bool {
-	var configPath func() string
-	switch app {
-	case "antigravity":
-		configPath = antigravityConfigPath
-	case "github-copilot":
-		configPath = copilotConfigPath
-	default:
-		configPath = antigravityConfigPath
-	}
+	configPath := jsonHookConfigPath(app)
 	return func() bool {
 		_, err := os.Stat(configPath())
 		return err == nil
@@ -384,13 +418,19 @@ func aider() *HostPlugin {
 	}
 }
 
-func aiderEnvPath() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".aider.env")
+func aiderEnvPath() (string, error) {
+	home, err := userHome()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".aider.env"), nil
 }
 
 func isAiderInstalled() bool {
-	path := aiderEnvPath()
+	path, err := aiderEnvPath()
+	if err != nil {
+		return false
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return false
@@ -399,21 +439,24 @@ func isAiderInstalled() bool {
 }
 
 func installAider(socketPath string) error {
-	path := aiderEnvPath()
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	path, err := aiderEnvPath()
+	if err != nil {
+		return err
+	}
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-
-	if _, err := f.WriteString("\n# Slash hook integration\nSLASH_HOOK=1\n"); err != nil {
-		return err
-	}
-	return nil
+	_, err = f.WriteString("\n# Slash hook integration\nSLASH_HOOK=1\n")
+	return err
 }
 
 func uninstallAider() error {
-	path := aiderEnvPath()
+	path, err := aiderEnvPath()
+	if err != nil {
+		return nil
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil
@@ -424,7 +467,7 @@ func uninstallAider() error {
 			lines = append(lines, line)
 		}
 	}
-	return os.WriteFile(path, []byte(strings.Join(lines, "\n")), 0644)
+	return os.WriteFile(path, []byte(strings.Join(lines, "\n")), 0600)
 }
 
 // --- Zed ---
@@ -984,7 +1027,24 @@ func uninstallPearAI() error {
 
 // --- helpers ---
 
+func userHome() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("cannot determine home directory: %w", err)
+	}
+	return home, nil
+}
+
 func configPaths(parts ...string) []string {
 	home, _ := os.UserHomeDir()
 	return []string{filepath.Join(append([]string{home, ".config"}, parts...)...)}
+}
+
+func jsonHookConfigPath(app string) func() string {
+	switch app {
+	case "github-copilot":
+		return copilotConfigPath
+	default:
+		return antigravityConfigPath
+	}
 }

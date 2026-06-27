@@ -7,6 +7,8 @@ import (
 	"log"
 	"net"
 	"os"
+	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,6 +17,8 @@ import (
 	"github.com/yoosuf/Slash/internal/store"
 	"github.com/yoosuf/Slash/internal/track"
 )
+
+const maxLatencySamples = 1000
 
 type Daemon struct {
 	socket      string
@@ -102,17 +106,16 @@ func (d *Daemon) Start() error {
 
 func (d *Daemon) acceptLoop() {
 	for {
-		select {
-		case <-d.ctx.Done():
-			return
-		default:
-		}
-
 		conn, err := d.listener.Accept()
 		if err != nil {
-			continue
+			select {
+			case <-d.ctx.Done():
+				return
+			default:
+				d.logger.Printf("accept error: %v", err)
+				continue
+			}
 		}
-
 		go d.handleConnection(conn)
 	}
 }
@@ -221,7 +224,7 @@ func (d *Daemon) compress(event *adapters.HookEvent, session *SessionState) *ada
 			}
 		}
 
-		compressed, meta := d.compressor.Compress(outputStr)
+		compressed, meta := d.compressor.Compress(outputStr, path)
 		if compressed != outputStr {
 			result.UpdatedToolOutput = compressed
 			result.CompressionMeta = meta
@@ -239,7 +242,7 @@ func (d *Daemon) compress(event *adapters.HookEvent, session *SessionState) *ada
 			return result
 		}
 
-		compressed, meta := d.compressor.Compress(outputStr)
+		compressed, meta := d.compressor.Compress(outputStr, "")
 		if compressed != outputStr {
 			result.UpdatedToolOutput = compressed
 			result.CompressionMeta = meta
@@ -256,7 +259,7 @@ func (d *Daemon) compress(event *adapters.HookEvent, session *SessionState) *ada
 
 	outputStr, ok := event.ToolOutput.(string)
 	if ok {
-		compressed, meta := d.compressor.Compress(outputStr)
+		compressed, meta := d.compressor.Compress(outputStr, "")
 		if compressed != outputStr {
 			result.UpdatedToolOutput = compressed
 			result.CompressionMeta = meta
@@ -301,8 +304,8 @@ func (d *Daemon) recordMetrics(session *SessionState, event *adapters.HookEvent,
 	session.Metrics.TotalCalls++
 	d.metrics.TotalCalls++
 
-	session.Metrics.LatencyMS = append(session.Metrics.LatencyMS, latencyMS)
-	d.metrics.LatencyMS = append(d.metrics.LatencyMS, latencyMS)
+	session.Metrics.LatencyMS = appendLatency(session.Metrics.LatencyMS, latencyMS)
+	d.metrics.LatencyMS = appendLatency(d.metrics.LatencyMS, latencyMS)
 
 	if result.UpdatedToolOutput != nil || result.UpdatedInput != nil {
 		session.Metrics.CallsCompressed++
@@ -318,32 +321,26 @@ func extractMethod(meta string) string {
 	if meta == "" {
 		return "none"
 	}
-	if contains(meta, "re-read") || contains(meta, "diff") {
+	if strings.Contains(meta, "re-read") || strings.Contains(meta, "diff") {
 		return "re_read_diff"
 	}
-	if contains(meta, "skeleton") {
+	if strings.Contains(meta, "skeleton") {
 		return "skeleton"
 	}
-	if contains(meta, "dedup") {
+	if strings.Contains(meta, "dedup") {
 		return "dedup"
 	}
-	if contains(meta, "truncat") {
+	if strings.Contains(meta, "truncat") {
 		return "truncate"
 	}
 	return "other"
 }
 
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s[len(s)-len(substr):] == substr || s[:len(substr)] == substr || (len(s) > len(substr) && stringsContains(s, substr)))
-}
-
-func stringsContains(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
+func appendLatency(slice []int64, val int64) []int64 {
+	if len(slice) >= maxLatencySamples {
+		slice = slice[1:]
 	}
-	return false
+	return append(slice, val)
 }
 
 func (d *Daemon) cleanupLoop() {
@@ -399,16 +396,15 @@ func (d *Daemon) Stats() map[string]interface{} {
 }
 
 func percentiles(latencies []int64) (int64, int64) {
-	if len(latencies) == 0 {
+	n := len(latencies)
+	if n == 0 {
 		return 0, 0
 	}
-	var p50, p95 int64
-	if len(latencies) > 0 {
-		p50 = latencies[len(latencies)/2]
-	}
-	if len(latencies) > 1 {
-		p95 = latencies[len(latencies)*95/100]
-	}
+	sorted := make([]int64, n)
+	copy(sorted, latencies)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
+	p50 := sorted[n/2]
+	p95 := sorted[n*95/100]
 	return p50, p95
 }
 

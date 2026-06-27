@@ -113,13 +113,11 @@ func (c *CCRCache) Insert(original []byte, tool, path, compressionType string, s
 
 // Get retrieves a cache entry by handle.
 func (c *CCRCache) Get(handle string) ([]byte, error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	var original []byte
-	query := `SELECT original FROM ccr_cache WHERE handle = ?`
-
-	err := c.db.QueryRow(query, handle).Scan(&original)
+	err := c.db.QueryRow(`SELECT original FROM ccr_cache WHERE handle = ?`, handle).Scan(&original)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("handle not found: %s", handle)
@@ -127,13 +125,7 @@ func (c *CCRCache) Get(handle string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to retrieve cache entry: %w", err)
 	}
 
-	// Update accessed_at in background.
-	go func() {
-		c.mu.Lock()
-		defer c.mu.Unlock()
-		_, _ = c.db.Exec(`UPDATE ccr_cache SET accessed_at = ? WHERE handle = ?`, time.Now().UTC(), handle)
-	}()
-
+	_, _ = c.db.Exec(`UPDATE ccr_cache SET accessed_at = ? WHERE handle = ?`, time.Now().UTC(), handle)
 	return original, nil
 }
 

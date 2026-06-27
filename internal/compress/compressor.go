@@ -20,14 +20,14 @@ func NewCompressor(cache *store.CCRCache) *Compressor {
 	}
 }
 
-func (c *Compressor) Compress(output interface{}) (interface{}, string) {
+func (c *Compressor) Compress(output interface{}, filename string) (interface{}, string) {
 	contentType := detectType(output)
 
 	switch contentType {
 	case "json":
 		return c.compressJSON(output)
 	case "code":
-		return c.compressCode(output)
+		return c.compressCode(output, filename)
 	case "logs":
 		return c.compressLogs(output)
 	case "text":
@@ -39,19 +39,19 @@ func (c *Compressor) Compress(output interface{}) (interface{}, string) {
 
 func (c *Compressor) CompressReRead(output string, previousContent string) (interface{}, string) {
 	if previousContent == output {
-		handle, _ := c.cache.Insert([]byte(output), "read", "", "re_read_unchanged", int64(len(output)))
+		handle, err := c.cache.Insert([]byte(output), "read", "", "re_read_unchanged", int64(len(output)))
+		if err != nil {
+			return output, ""
+		}
 		result := fmt.Sprintf(`[content unchanged since last read — %d bytes, retrieve(%s) for full content]`, len(output), handle)
 		return result, "[slash: content unchanged, retrieve handle provided]"
 	}
 
 	diffs := DiffLines(previousContent, output)
 
-	var similarLines int
 	var changedLines int
 	for _, d := range diffs {
-		if d.Type == DiffEqual {
-			similarLines++
-		} else {
+		if d.Type != DiffEqual {
 			changedLines++
 		}
 	}
@@ -61,18 +61,22 @@ func (c *Compressor) CompressReRead(output string, previousContent string) (inte
 
 	if changeRatio > 0.3 {
 		d := ComputeDiffHunks(previousContent, output, 3)
-		handle, _ := c.cache.Insert([]byte(output), "read", "", "re_read_diff", int64(len(d)))
-		result := fmt.Sprintf(`%s
-[retrieve(%s) for full content]`, d, handle)
+		handle, err := c.cache.Insert([]byte(output), "read", "", "re_read_diff", int64(len(d)))
+		if err != nil {
+			return output, ""
+		}
+		result := fmt.Sprintf("%s\n[retrieve(%s) for full content]", d, handle)
 		savings := 100 * (len(output) - len(d)) / len(output)
 		meta := fmt.Sprintf("[slash: re-read diff, %d%% reduction, %d lines changed]", savings, totalChanged)
 		return result, meta
 	}
 
 	summary := CompactDiffSummary(previousContent, output)
-	handle, _ := c.cache.Insert([]byte(output), "read", "", "re_read_changed", int64(len(summary)))
-	result := fmt.Sprintf(`%s
-[retrieve(%s) for full content]`, summary, handle)
+	handle, err := c.cache.Insert([]byte(output), "read", "", "re_read_changed", int64(len(summary)))
+	if err != nil {
+		return output, ""
+	}
+	result := fmt.Sprintf("%s\n[retrieve(%s) for full content]", summary, handle)
 	savings := 100 * (len(output) - len(summary)) / len(output)
 	meta := fmt.Sprintf("[slash: re-read compact diff, %d%% reduction, %d lines changed]", savings, totalChanged)
 	return result, meta
@@ -115,7 +119,7 @@ func isCode(s string) bool {
 		"public ", "private ", "protected ",
 		"interface ", "type ", "struct ", "enum ",
 		"impl ", "trait ", "fn ",
-		"require(", "require(",
+		"require(",
 	}
 
 	for _, pattern := range codePatterns {
@@ -175,7 +179,10 @@ func (c *Compressor) compressJSON(output interface{}) (interface{}, string) {
 	}
 
 	originalBytes := []byte(s)
-	handle, _ := c.cache.Insert(originalBytes, "json", "", "json_skeleton", int64(len(skeletonStr)))
+	handle, err := c.cache.Insert(originalBytes, "json", "", "json_skeleton", int64(len(skeletonStr)))
+	if err != nil {
+		return output, ""
+	}
 
 	savings := 0
 	if len(s) > 0 {
@@ -228,7 +235,7 @@ func skeletonizeJSON(data interface{}) interface{} {
 	}
 }
 
-func (c *Compressor) compressCode(output interface{}) (interface{}, string) {
+func (c *Compressor) compressCode(output interface{}, filename string) (interface{}, string) {
 	s, ok := output.(string)
 	if !ok {
 		return output, ""
@@ -238,14 +245,17 @@ func (c *Compressor) compressCode(output interface{}) (interface{}, string) {
 		return output, ""
 	}
 
-	skeleton := c.codeSk.Skeletonize(s, "")
+	skeleton := c.codeSk.Skeletonize(s, filename)
 
 	if skeleton == s || len(skeleton) >= len(s)*9/10 {
 		return output, ""
 	}
 
 	originalBytes := []byte(s)
-	handle, _ := c.cache.Insert(originalBytes, "code", "", "code_skeleton", int64(len(skeleton)))
+	handle, err := c.cache.Insert(originalBytes, "code", "", "code_skeleton", int64(len(skeleton)))
+	if err != nil {
+		return output, ""
+	}
 
 	result := fmt.Sprintf(`%s
 [retrieve(%s) for full code]`, skeleton, handle)
@@ -309,7 +319,10 @@ func (c *Compressor) compressLogs(output interface{}) (interface{}, string) {
 	}
 
 	originalBytes := []byte(s)
-	handle, _ := c.cache.Insert(originalBytes, "logs", "", "log_dedup", int64(len(compressedStr)))
+	handle, err := c.cache.Insert(originalBytes, "logs", "", "log_dedup", int64(len(compressedStr)))
+	if err != nil {
+		return output, ""
+	}
 
 	result := fmt.Sprintf(`%s
 [retrieve(%s) for full logs]`, compressedStr, handle)
@@ -341,7 +354,10 @@ func (c *Compressor) compressText(output interface{}) (interface{}, string) {
 
 	truncated := head + "\n...\n[truncated: " + fmt.Sprintf("%d bytes omitted", len(s)-maxChars) + "]\n...\n" + tail
 	originalBytes := []byte(s)
-	handle, _ := c.cache.Insert(originalBytes, "text", "", "text_truncate", int64(len(truncated)))
+	handle, err := c.cache.Insert(originalBytes, "text", "", "text_truncate", int64(len(truncated)))
+	if err != nil {
+		return output, ""
+	}
 
 	result := fmt.Sprintf(`%s
 [retrieve(%s) for full content]`, truncated, handle)
