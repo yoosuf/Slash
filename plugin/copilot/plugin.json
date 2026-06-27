@@ -1,0 +1,30 @@
+{
+  "name": "slash",
+  "version": "1.0.0",
+  "description": "Token compression for Copilot CLI",
+  "author": "Slash Contributors",
+  "license": "Apache-2.0",
+  "agents": {
+    "hooks": [
+      {
+        "eventType": "preToolUse",
+        "handler": "hooks/hook.js"
+      },
+      {
+        "eventType": "postToolUse",
+        "handler": "hooks/hook.js"
+      }
+    ]
+  },
+  "mcp": [
+    {
+      "name": "slash",
+      "url": "http://localhost:8765"
+    }
+  ],
+  "requiredCapabilities": [
+    "hooks.preToolUse",
+    "hooks.postToolUse",
+    "mcp"
+  ]
+}

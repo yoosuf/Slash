@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.9.0.schema.json
+# Submit to: https://github.com/microsoft/winget-pkgs
+# Path: manifests/y/yoosuf/slash/1.0.0/
+
+PackageIdentifier: yoosuf.slash
+PackageVersion: 1.0.0
+InstallerType: zip
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/yoosuf/Slash/releases/download/v1.0.0/slash-windows-amd64.zip
+    InstallerSha256: f3df9d5a624a4ecc74ede1698f6086c2990636f11cca63061bd04c6c7f2320ce
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: slash-windows-amd64.exe
+        PortableCommandAlias: slash
+ManifestType: installer
+ManifestVersion: 1.9.0

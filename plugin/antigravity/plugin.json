@@ -1,0 +1,22 @@
+{
+  "name": "slash",
+  "version": "1.0.0",
+  "description": "Token compression for Antigravity",
+  "author": "Slash Contributors",
+  "license": "Apache-2.0",
+  "hooks": {
+    "pre-flight": {
+      "path": "hooks/hook.js",
+      "timeout": 2000
+    },
+    "post-flight": {
+      "path": "hooks/hook.js",
+      "timeout": 2000
+    }
+  },
+  "mcp_config": "mcp_config.json",
+  "permissions": [
+    "read_workspace",
+    "execute_tools"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "event_id": "evt_550e8400e29b41d4a716446655440000",
+  "event_kind": "preToolUse",
+  "tool": "apply_patch",
+  "tool_input": {
+    "path": "/Users/dev/myproject/src/api.ts",
+    "patch": "--- a/src/api.ts\n+++ b/src/api.ts\n@@ -10,3 +10,5 @@\n\n export function getUser(id: string) {\n   return db.users.findById(id);\n+\n+// new function"
+  },
+  "workspace_dir": "/Users/dev/myproject",
+  "session_id": "sess_660e8400e29b41d4a716446655440001",
+  "machine_id": "mach_770e8400e29b41d4a716446655440002"
+}

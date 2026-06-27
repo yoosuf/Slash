@@ -1,0 +1,12 @@
+{
+  "eventId": "evt_550e8400e29b41d4a716446655440000",
+  "eventKind": "postToolUse",
+  "tool": "read",
+  "toolInput": {
+    "path": "/Users/dev/myproject/src/main.go"
+  },
+  "toolOutput": "package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tfmt.Println(\"Hello, World!\")\n}\n",
+  "workspaceDir": "/Users/dev/myproject",
+  "sessionId": "sess_660e8400e29b41d4a716446655440001",
+  "machineId": "mach_770e8400e29b41d4a716446655440002"
+}

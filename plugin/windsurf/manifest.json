@@ -1,0 +1,33 @@
+{
+  "name": "slash",
+  "version": "1.0.0",
+  "displayName": "Slash for Windsurf",
+  "description": "Token compression plugin for Windsurf. 40-60% context reduction, reversible retrieval.",
+  "author": "Slash Contributors",
+  "license": "Apache-2.0",
+  "hooks": [
+    {
+      "eventKind": "preToolUse",
+      "pathPattern": "hooks/hook.js"
+    },
+    {
+      "eventKind": "postToolUse",
+      "pathPattern": "hooks/hook.js"
+    }
+  ],
+  "mcp_servers": [
+    {
+      "name": "slash",
+      "url": "http://localhost:8765"
+    }
+  ],
+  "permissions": [
+    "readWorkspace",
+    "executeTools",
+    "accessMCP"
+  ],
+  "config": {
+    "enabled": true,
+    "compressionLevel": "balanced"
+  }
+}

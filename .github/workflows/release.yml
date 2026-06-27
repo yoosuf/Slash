@@ -1,0 +1,138 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            ext: ""
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+            ext: ""
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            ext: ""
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            ext: ".exe"
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build
+        shell: bash
+        env:
+          CGO_ENABLED: 1
+        run: go build -ldflags "-X main.Version=${{ github.ref_name }}" -o slash-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} ./cmd/slash
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: slash-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: slash-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p dist
+
+          # Package each platform binary
+          for dir in artifacts/*/; do
+            name=$(basename "$dir")
+            file=$(ls "$dir")
+            cp "$dir/$file" "dist/$name"
+            case "$name" in
+              *windows*)
+                zip -j "dist/${name}.zip" "$dir/$file"
+                ;;
+              *)
+                chmod +x "$dir/$file"
+                tar czf "dist/${name}.tar.gz" -C "$dir" "$file"
+                ;;
+            esac
+          done
+
+          # Build .deb package for Linux
+          if [ -f dist/slash-linux-amd64 ]; then
+            mkdir -p debroot/DEBIAN debroot/usr/local/bin
+            cp dist/slash-linux-amd64 debroot/usr/local/bin/slash
+            v="$(echo '${{ github.ref_name }}' | sed 's/^v//')"
+            printf 'Package: slash\nVersion: %s\nSection: utils\nPriority: optional\nArchitecture: amd64\nMaintainer: Yoosuf <https://github.com/yoosuf>\nDescription: Reversible token compressor for AI coding tools\n Reduces context size 40-60%% with zero data leaving your machine.\n Supports Claude Code, Cursor, Windsurf, Codex, and more.\n' "$v" > debroot/DEBIAN/control
+            chmod -R 0755 debroot
+            dpkg-deb --build debroot "dist/slash-linux-amd64.deb"
+            rm -rf debroot
+          fi
+
+          # Build .rpm package for Linux
+          if command -v rpmbuild &>/dev/null && [ -f dist/slash-linux-amd64 ]; then
+            mkdir -p rpmroot/usr/local/bin
+            cp dist/slash-linux-amd64 rpmroot/usr/local/bin/slash
+            v="$(echo '${{ github.ref_name }}' | sed 's/^v//')"
+            printf 'Name: slash\nVersion: %s\nRelease: 1\nSummary: Reversible token compressor for AI coding tools\nLicense: Apache-2.0\nURL: https://github.com/yoosuf/Slash\n%%description\nReduces context size 40-60%% with zero data leaving your machine.\n%%install\nmkdir -p %%{buildroot}/usr/local/bin\ncp %%{_sourcedir}/../rpmroot/usr/local/bin/slash %%{buildroot}/usr/local/bin/slash\n%%files\n/usr/local/bin/slash\n' "$v" > slash.spec
+            rpmbuild -bb --define "_topdir $(pwd)/rpmbuild" slash.spec 2>/dev/null || true
+          fi
+
+          cd dist
+          sha256sum * > SHA256SUMS
+          echo "=== Release assets ==="
+          ls -la
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          body: |
+            ## Slash v${{ github.ref_name }}
+
+            Token reduction and speed plugin for agentic coding tools.
+
+            ### Install
+            ```bash
+            # macOS ARM64 (Apple Silicon)
+            tar xzf slash-darwin-arm64.tar.gz
+            sudo mv slash-darwin-arm64 /usr/local/bin/slash
+
+            # macOS x86_64
+            tar xzf slash-darwin-amd64.tar.gz
+            sudo mv slash-darwin-amd64 /usr/local/bin/slash
+
+            # Linux x86_64
+            tar xzf slash-linux-amd64.tar.gz
+            sudo mv slash-linux-amd64 /usr/local/bin/slash
+
+            # Windows
+            unzip slash-windows-amd64.zip
+            ```
+          draft: false
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,10 @@
+{
+  "event_id": "evt_550e8400e29b41d4a716446655440000",
+  "event_kind": "postToolUse",
+  "tool": "read",
+  "tool_input": {"path": "/Users/dev/myproject/src/main.rs"},
+  "tool_output": "fn main() {\n    println!(\"Hello, Rust!\");\n}\n",
+  "workspace_dir": "/Users/dev/myproject",
+  "session_id": "sess_660e8400e29b41d4a716446655440001",
+  "machine_id": "mach_770e8400e29b41d4a716446655440002"
+}

@@ -1,0 +1,10 @@
+{
+  "eventId": "evt_550e8400e29b41d4a716446655440000",
+  "eventKind": "postToolUse",
+  "tool": "bash",
+  "toolInput": {"command": "npm test -- --watch=false"},
+  "toolOutput": "PASS src/App.test.tsx\n  ✓ renders without crashing\n  ✓ displays correct title\n\nTests: 2 passed, 2 total\n",
+  "workspaceDir": "/Users/dev/project",
+  "sessionId": "sess_660e8400e29b41d4a716446655440001",
+  "machineId": "mach_770e8400e29b41d4a716446655440002"
+}

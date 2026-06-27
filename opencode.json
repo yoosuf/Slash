@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "command": {
+    "slash": {
+      "description": "Run the Slash compression tool commands (stats, bench, audit, daemon, cache, purge, etc.)",
+      "template": "Run `./slash $ARGUMENTS` from the project root at /Users/yoosuf/Desktop/slash/slash and return the output to the user."
+    },
+    "slash-retrieve": {
+      "description": "Retrieve decompressed content by handle from the Slash cache",
+      "template": "Run `./slash cache check $ARGUMENTS` from the project root at /Users/yoosuf/Desktop/slash/slash and return the result."
+    },
+    "slash-purge": {
+      "description": "Purge the Slash compression cache",
+      "template": "Run `./slash purge` from the project root at /Users/yoosuf/Desktop/slash/slash and return the output."
+    },
+    "slash-plugins": {
+      "description": "List installed Slash plugins for all supported editors/tools",
+      "template": "Run `./slash plugin ls` from the project root at /Users/yoosuf/Desktop/slash/slash and return the output to the user."
+    }
+  }
+}

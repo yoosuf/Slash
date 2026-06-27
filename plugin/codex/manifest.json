@@ -1,0 +1,28 @@
+{
+  "name": "slash",
+  "version": "1.0.0",
+  "displayName": "Slash for Codex",
+  "description": "Local-first token compression. Reduces context by 40-60% with reversible retrieve() compression.",
+  "author": "Slash Contributors",
+  "license": "Apache-2.0",
+  "hooks": {
+    "preToolUse": "hooks/hook.js",
+    "postToolUse": "hooks/hook.js"
+  },
+  "mcp_servers": [
+    {
+      "name": "slash",
+      "url": "http://localhost:8765",
+      "description": "Retrieve, repomap, stats"
+    }
+  ],
+  "permissions": [
+    "readWorkspace",
+    "executeTools"
+  ],
+  "config": {
+    "enabled": true,
+    "cacheDir": "$XDG_CACHE_HOME/slash",
+    "compressionLevel": "balanced"
+  }
+}

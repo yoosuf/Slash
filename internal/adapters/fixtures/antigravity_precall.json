@@ -1,0 +1,11 @@
+{
+  "event_id": "evt_550e8400e29b41d4a716446655440000",
+  "event_kind": "preToolUse",
+  "tool": "bash",
+  "tool_input": {
+    "command": "find src -name '*.go' | head -20"
+  },
+  "workspace_dir": "/Users/dev/myproject",
+  "session_id": "sess_660e8400e29b41d4a716446655440001",
+  "machine_id": "mach_770e8400e29b41d4a716446655440002"
+}

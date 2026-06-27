@@ -1,0 +1,172 @@
+{
+  "latency_p50_ms": 0.45496868749999997,
+  "latency_p95_ms": 0.6824530312499999,
+  "overall_reduction": 46,
+  "pass_rate": 25,
+  "passed": 4,
+  "results": [
+    {
+      "Name": "Small JSON (100 bytes)",
+      "ContentType": "json",
+      "OriginalSize": 61,
+      "CompressedSize": 61,
+      "ReductionPercent": 0,
+      "LatencyMS": 0.194666,
+      "CompressionRatio": 1,
+      "Pass": false
+    },
+    {
+      "Name": "Medium JSON (1KB)",
+      "ContentType": "json",
+      "OriginalSize": 9971,
+      "CompressedSize": 62,
+      "ReductionPercent": 99,
+      "LatencyMS": 1.001959,
+      "CompressionRatio": 0.006218032293651589,
+      "Pass": true
+    },
+    {
+      "Name": "Large JSON (10KB)",
+      "ContentType": "json",
+      "OriginalSize": 102671,
+      "CompressedSize": 63,
+      "ReductionPercent": 99,
+      "LatencyMS": 3.0694160000000004,
+      "CompressionRatio": 0.0006136104644933818,
+      "Pass": true
+    },
+    {
+      "Name": "Nested JSON (5KB)",
+      "ContentType": "json",
+      "OriginalSize": 226,
+      "CompressedSize": 226,
+      "ReductionPercent": 0,
+      "LatencyMS": 0.047458,
+      "CompressionRatio": 1,
+      "Pass": false
+    },
+    {
+      "Name": "Small Go (50 lines)",
+      "ContentType": "code",
+      "OriginalSize": 2370,
+      "CompressedSize": 2370,
+      "ReductionPercent": 0,
+      "LatencyMS": 0.112333,
+      "CompressionRatio": 1,
+      "Pass": false
+    },
+    {
+      "Name": "Medium Go (200 lines)",
+      "ContentType": "code",
+      "OriginalSize": 9620,
+      "CompressedSize": 9620,
+      "ReductionPercent": 0,
+      "LatencyMS": 0.039292,
+      "CompressionRatio": 1,
+      "Pass": false
+    },
+    {
+      "Name": "Large Go (1000 lines)",
+      "ContentType": "code",
+      "OriginalSize": 48820,
+      "CompressedSize": 48820,
+      "ReductionPercent": 0,
+      "LatencyMS": 0.180542,
+      "CompressionRatio": 1,
+      "Pass": false
+    },
+    {
+      "Name": "TypeScript (300 lines)",
+      "ContentType": "code",
+      "OriginalSize": 4745,
+      "CompressedSize": 4745,
+      "ReductionPercent": 0,
+      "LatencyMS": 0.051208000000000004,
+      "CompressionRatio": 1,
+      "Pass": false
+    },
+    {
+      "Name": "Python (200 lines)",
+      "ContentType": "code",
+      "OriginalSize": 3964,
+      "CompressedSize": 3964,
+      "ReductionPercent": 0,
+      "LatencyMS": 0.012666,
+      "CompressionRatio": 1,
+      "Pass": false
+    },
+    {
+      "Name": "Small Log (20 lines)",
+      "ContentType": "logs",
+      "OriginalSize": 950,
+      "CompressedSize": 950,
+      "ReductionPercent": 0,
+      "LatencyMS": 0.017542,
+      "CompressionRatio": 1,
+      "Pass": false
+    },
+    {
+      "Name": "Medium Log (200 lines)",
+      "ContentType": "logs",
+      "OriginalSize": 9690,
+      "CompressedSize": 9690,
+      "ReductionPercent": 0,
+      "LatencyMS": 0.112125,
+      "CompressionRatio": 1,
+      "Pass": false
+    },
+    {
+      "Name": "Large Log (2000 lines)",
+      "ContentType": "logs",
+      "OriginalSize": 98890,
+      "CompressedSize": 98890,
+      "ReductionPercent": 0,
+      "LatencyMS": 0.806792,
+      "CompressionRatio": 1,
+      "Pass": false
+    },
+    {
+      "Name": "Repeated Log (100 identical lines)",
+      "ContentType": "logs",
+      "OriginalSize": 5600,
+      "CompressedSize": 123,
+      "ReductionPercent": 97,
+      "LatencyMS": 0.548292,
+      "CompressionRatio": 0.021964285714285714,
+      "Pass": true
+    },
+    {
+      "Name": "Short Text (500 bytes)",
+      "ContentType": "text",
+      "OriginalSize": 500,
+      "CompressedSize": 500,
+      "ReductionPercent": 0,
+      "LatencyMS": 0.008375,
+      "CompressionRatio": 1,
+      "Pass": false
+    },
+    {
+      "Name": "Medium Text (5KB)",
+      "ContentType": "text",
+      "OriginalSize": 5000,
+      "CompressedSize": 5000,
+      "ReductionPercent": 0,
+      "LatencyMS": 0.048458,
+      "CompressionRatio": 1,
+      "Pass": false
+    },
+    {
+      "Name": "Large Text (50KB)",
+      "ContentType": "text",
+      "OriginalSize": 50000,
+      "CompressedSize": 5081,
+      "ReductionPercent": 89,
+      "LatencyMS": 1.028375,
+      "CompressionRatio": 0.10162,
+      "Pass": true
+    }
+  ],
+  "total_benchmarks": 16,
+  "total_compressed_mb": 0.18135547637939453,
+  "total_original_mb": 0.33672142028808594
+}

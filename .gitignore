@@ -1,0 +1,41 @@
+# Binaries
+/slash
+/slash.exe
+*.o
+*.so
+*.dylib
+
+# Build
+/dist/
+/build/
+*.mod.tidy
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test coverage
+*.cover
+coverage.txt
+coverage.html
+
+# Rust / Cargo build artifacts
+target/
+
+# Cache and runtime
+.slash/
+*.sock
+.env
+.env.local
+
+# Generated plugin install artifacts
+.opencode/
+
+# Temporary
+tmp/
+temp/
+*.tmp

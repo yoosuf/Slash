@@ -1,0 +1,65 @@
+{
+  "name": "slash-compressor",
+  "displayName": "Slash Compressor",
+  "description": "Reversible token compressor for AI coding tools — reduces context size 40-60%",
+  "version": "1.0.0",
+  "publisher": "yoosuf",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yoosuf/Slash.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "slash.toggle",
+        "title": "Slash: Toggle Compression"
+      },
+      {
+        "command": "slash.stats",
+        "title": "Slash: Show Compression Stats"
+      },
+      {
+        "command": "slash.restartDaemon",
+        "title": "Slash: Restart Daemon"
+      }
+    ],
+    "configuration": {
+      "title": "Slash",
+      "properties": {
+        "slash.socketPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the Slash daemon Unix socket (default: ~/.slash/daemon.sock)"
+        },
+        "slash.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Slash compression"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0"
+  }
+}

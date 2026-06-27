@@ -1,0 +1,10 @@
+{
+  "eventId": "evt_550e8400e29b41d4a716446655440000",
+  "eventKind": "postToolUse",
+  "tool": "read",
+  "toolInput": {"path": "/Users/dev/project/src/App.tsx"},
+  "toolOutput": "import React from 'react';\n\nexport default function App() {\n  return <div>Hello, Cursor!</div>;\n}\n",
+  "workspaceDir": "/Users/dev/project",
+  "sessionId": "sess_660e8400e29b41d4a716446655440001",
+  "machineId": "mach_770e8400e29b41d4a716446655440002"
+}

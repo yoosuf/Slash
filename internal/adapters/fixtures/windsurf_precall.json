@@ -1,0 +1,11 @@
+{
+  "eventId": "evt_550e8400e29b41d4a716446655440000",
+  "eventKind": "preToolUse",
+  "tool": "bash",
+  "toolInput": {
+    "command": "npm test -- --watch=false"
+  },
+  "workspaceDir": "/Users/dev/project",
+  "sessionId": "sess_660e8400e29b41d4a716446655440001",
+  "machineId": "mach_770e8400e29b41d4a716446655440002"
+}

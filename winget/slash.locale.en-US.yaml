@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.9.0.schema.json
+
+PackageIdentifier: yoosuf.slash
+PackageVersion: 1.0.0
+PackageLocale: en-US
+Publisher: Yoosuf
+PublisherUrl: https://github.com/yoosuf
+PublisherSupportUrl: https://github.com/yoosuf/Slash/issues
+PackageName: Slash
+PackageUrl: https://github.com/yoosuf/Slash
+License: Apache-2.0
+LicenseUrl: https://github.com/yoosuf/Slash/blob/main/LICENSE.md
+ShortDescription: Reversible token compressor for AI coding tools — reduces context size 40-60%
+Description: Slash is a local-first, reversible token compressor that reduces context size by 40-60% for Claude Code, Codex, Antigravity, Copilot CLI, Cursor, Windsurf, Aider, and any ACP-compatible host. Compression is reversible (via on-demand retrieve), and nothing leaves your machine by default.
+Moniker: slash
+Tags:
+  - compression
+  - tokens
+  - llm
+  - ai
+  - claude
+  - developer-tools
+ManifestType: defaultLocale
+ManifestVersion: 1.9.0

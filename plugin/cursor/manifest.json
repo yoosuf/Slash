@@ -1,0 +1,56 @@
+{
+  "name": "slash",
+  "version": "1.0.0",
+  "displayName": "Slash - Token Reduction for Cursor",
+  "description": "Local-first token compression. Reduces context size by 40-60% for faster responses. Reversible via retrieve() tool.",
+  "author": "Slash Contributors",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/yoosuf/Slash",
+  "homepage": "https://github.com/yoosuf/Slash",
+  "keywords": ["token", "compression", "performance", "context", "claude"],
+  "pricing": "free",
+  "privacy": "Your source code never leaves your machine.",
+  "hooks": [
+    {
+      "eventKind": "preToolUse",
+      "pathPattern": "hooks/pre-tool-use.js"
+    },
+    {
+      "eventKind": "postToolUse",
+      "pathPattern": "hooks/post-tool-use.js"
+    }
+  ],
+  "mcpServers": [
+    {
+      "name": "slash",
+      "description": "retrieve compressed content, access repo map, compression stats",
+      "url": "http://localhost:8765"
+    }
+  ],
+  "commands": [
+    {
+      "title": "Slash: Show Stats",
+      "command": "slash.showStats"
+    },
+    {
+      "title": "Slash: Purge Cache",
+      "command": "slash.purgeCache"
+    }
+  ],
+  "requiredPermissions": [
+    "readWorkspace",
+    "executeTools",
+    "accessMCP"
+  ],
+  "configuration": {
+    "slash.enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "slash.compressionLevel": {
+      "type": "string",
+      "enum": ["aggressive", "balanced", "conservative"],
+      "default": "balanced"
+    }
+  }
+}

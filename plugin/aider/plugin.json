@@ -1,0 +1,27 @@
+{
+  "name": "slash",
+  "version": "1.0.0",
+  "description": "Token compression plugin for Aider CLI",
+  "author": "Slash Contributors",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/yoosuf/Slash",
+  "hooks": {
+    "pre": {
+      "path": "hooks/hook.py",
+      "timeout_ms": 2000
+    },
+    "post": {
+      "path": "hooks/hook.py",
+      "timeout_ms": 2000
+    }
+  },
+  "mcp_config": "mcp_config.json",
+  "permissions": [
+    "read_workspace",
+    "execute_tools",
+    "access_mcp"
+  ],
+  "environment": {
+    "SLASH_SOCKET": "$HOME/.slash/daemon.sock"
+  }
+}

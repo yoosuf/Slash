@@ -1,0 +1,13 @@
+{
+  "name": "slash",
+  "version": "1.0.0",
+  "displayName": "Slash - Token Reduction for Opencode",
+  "description": "Local-first token compression and speed plugin for opencode. Reduces context size by 40-60% with reversible compression.",
+  "author": "Slash Contributors",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/yoosuf/Slash",
+  "homepage": "https://github.com/yoosuf/Slash",
+  "keywords": ["token", "compression", "speed", "context", "optimization"],
+  "pricing": "free",
+  "privacy": "Your source code never leaves your machine. Everything is processed locally."
+}

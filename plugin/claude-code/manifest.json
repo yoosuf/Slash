@@ -1,0 +1,78 @@
+{
+  "name": "slash",
+  "version": "1.0.0",
+  "displayName": "Slash - Token Reduction for Claude Code",
+  "description": "Local-first token compression and speed plugin. Reduces context size by 40-60% with reversible compression via the retrieve() tool.",
+  "author": "Slash Contributors",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/yoosuf/Slash",
+  "homepage": "https://github.com/yoosuf/Slash",
+  "keywords": ["token", "compression", "speed", "context", "optimization"],
+  "pricing": "free",
+  "privacy": "Your source code never leaves your machine. Everything is processed locally.",
+  "hooks": [
+    {
+      "eventKind": "preToolUse",
+      "pathPattern": "hooks/pre-tool-use.js"
+    },
+    {
+      "eventKind": "postToolUse",
+      "pathPattern": "hooks/post-tool-use.js"
+    }
+  ],
+  "mcpServers": [
+    {
+      "name": "slash",
+      "description": "Retrieve compressed content, access repo map, and compression stats",
+      "url": "http://localhost:8765"
+    }
+  ],
+  "commands": [
+    {
+      "title": "Slash: Show Stats",
+      "command": "slash.showStats"
+    },
+    {
+      "title": "Slash: Purge Cache",
+      "command": "slash.purgeCache"
+    },
+    {
+      "title": "Slash: Show Settings",
+      "command": "slash.showSettings"
+    }
+  ],
+  "requiredPermissions": [
+    "readWorkspace",
+    "executeTools",
+    "accessMCP"
+  ],
+  "configuration": {
+    "slash.enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Slash compression"
+    },
+    "slash.compressionLevel": {
+      "type": "string",
+      "enum": ["aggressive", "balanced", "conservative"],
+      "default": "balanced",
+      "description": "Compression intensity"
+    },
+    "slash.cacheDir": {
+      "type": "string",
+      "default": "$XDG_CACHE_HOME/slash",
+      "description": "Cache directory path"
+    },
+    "slash.cacheTTL": {
+      "type": "number",
+      "default": 86400,
+      "description": "Cache TTL in seconds"
+    }
+  },
+  "capabilities": {
+    "preToolUse": true,
+    "postToolUse": true,
+    "mcp": true,
+    "userPrompt": false
+  }
+}

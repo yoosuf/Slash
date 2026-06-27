@@ -1,0 +1,10 @@
+{
+  "event_id": "evt_550e8400e29b41d4a716446655440000",
+  "event_kind": "postToolUse",
+  "tool": "read",
+  "tool_input": {"path": "/Users/dev/project/src/main.py"},
+  "tool_output": "#!/usr/bin/env python3\n\ndef hello(name: str) -> str:\n    return f'Hello, {name}!'\n\nif __name__ == '__main__':\n    print(hello('Aider'))\n",
+  "workspace_dir": "/Users/dev/project",
+  "session_id": "sess_660e8400e29b41d4a716446655440001",
+  "machine_id": "mach_770e8400e29b41d4a716446655440002"
+}
